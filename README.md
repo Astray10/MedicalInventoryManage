@@ -1,0 +1,2 @@
+# MedicalInventoryManage
+the final project

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Medical Inventory Management</title>
+    <link rel="stylesheet" href="login.css"> <!-- Include your CSS -->
+    <style>
+        /* Additional styles for login page */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #121212; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: #1e1e1e; /* Darker container */
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 300px; /* Fixed width for the login box */
+            text-align: center;
+            color: #e0e0e0; /* Light text color */
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #00bcd4; /* Cyan for heading */
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin: 5px 0;
+            border: 1px solid #424242; /* Dark gray border */
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #2b2b2b; /* Dark input fields */
+            color: #e0e0e0; /* Light text color */
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #00bcd4; /* Use CSS variable */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+            button:hover {
+                background-color: #0097a7; /* Darker cyan */
+            }
+
+        #error-message {
+            color: red;
+            margin-top: 10px;
+        }
+
+        #registerForm {
+            display: none; /* Hide registration form initially */
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2 id="formTitle">Login</h2>
+        <form id="loginForm">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Username" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Password" required>
+            <input type="checkbox" id="showPassword"> Show Password
+            <div id="error-message"></div>
+            <button type="submit">Login</button>
+        </form>
+
+        <div>
+            <button id="toggleRegisterBtn">Register</button>
+        </div>
+
+        <form id="registerForm">
+            <h2>Register</h2>
+            <label for="newUsername">Username</label>
+            <input type="text" id="newUsername" placeholder="Username" required>
+            <label for="newPassword">Password</label>
+            <input type="password" id="newPassword" placeholder="Password" required>
+            <div id="registerErrorMessage"></div>
+            <button type="submit" id="registerBtn">Create Account</button>
+            <button type="button" id="cancelRegisterBtn">Cancel</button>
+        </form>
+    </div>
+
+    <script>
+        // Simulated employee database (in localStorage)
+        const employeeDb = JSON.parse(localStorage.getItem('employeeDb')) || [];
+
+        // JavaScript for login handling
+        document.getElementById('loginForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent form submission
+
+            // Get input values
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+
+            // Check if the employee exists in the database
+            const employee = employeeDb.find(emp => emp.username === username && emp.password === password);
+            if (employee) {
+                console.log('Login successful. Redirecting...');
+
+                // Set logged in state
+                localStorage.setItem('loggedIn', 'true'); // Store login state
+
+                // Redirect to the inventory management page on successful login
+                window.location.href = './index.html'; // Use './' to specify the current directory
+            } else {
+                errorMessage.textContent = 'Invalid username or password!';
+            }
+        });
+
+        // Show/hide password functionality
+        document.getElementById('showPassword').addEventListener('change', function () {
+            const passwordField = document.getElementById('password');
+            passwordField.type = this.checked ? 'text' : 'password';
+        });
+
+        // Toggle registration form
+        document.getElementById('toggleRegisterBtn').addEventListener('click', function () {
+            const registerForm = document.getElementById('registerForm');
+            const loginForm = document.getElementById('loginForm');
+            const formTitle = document.getElementById('formTitle');
+
+            if (registerForm.style.display === 'none') {
+                registerForm.style.display = 'block';
+                loginForm.style.display = 'none';
+                formTitle.textContent = 'Register';
+            } else {
+                registerForm.style.display = 'none';
+                loginForm.style.display = 'block';
+                formTitle.textContent = 'Login';
+            }
+        });
+
+        // Handle registration
+        document.getElementById('registerForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent form submission
+
+            const newUsername = document.getElementById('newUsername').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const registerErrorMessage = document.getElementById('registerErrorMessage');
+
+            // Check if the username already exists
+            const userExists = employeeDb.some(emp => emp.username === newUsername);
+            if (userExists) {
+                registerErrorMessage.textContent = 'Username already exists!';
+                return;
+            }
+
+            // Add new employee to the database
+            employeeDb.push({ username: newUsername, password: newPassword });
+            localStorage.setItem('employeeDb', JSON.stringify(employeeDb));
+
+            // Show success message and reset the form
+            alert('Registration successful! You can now log in.');
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('formTitle').textContent = 'Login';
+        });
+
+        // Cancel registration
+        document.getElementById('cancelRegisterBtn').addEventListener('click', function () {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('formTitle').textContent = 'Login';
+        });
+    </script>
+</body>
+</html>

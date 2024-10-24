@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Overview - Medical Inventory Management</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #00bcd4;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        button {
+            background-color: #00bcd4;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+            button:hover {
+                background-color: #0097a7;
+            }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%;
+        }
+
+        .close {
+            color: red;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+            .close:hover,
+            .close:focus {
+                color: black;
+                text-decoration: none;
+                cursor: pointer;
+            }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 5px;
+            }
+
+            .form-group input {
+                width: 100%;
+                padding: 8px;
+                box-sizing: border-box;
+            }
+    </style>
+</head>
+<body>
+    <h1>Data Overview</h1>
+    <!-- Inventory Table -->
+    <div class="container">
+        <h2>Inventory Table</h2>
+        <table id="inventoryTable">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                    <th>Expiry Date</th>
+                    <th>Supplier</th>
+                    <th>Category</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Inventory data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+    <!-- Employee Table -->
+    <div class="container">
+        <h2>Employee Table</h2>
+        <table id="employeeTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Salary</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>DOB</th>
+                    <th>Hire Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Employee data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+    <!-- Supplier Table -->
+    <div class="container">
+        <h2>Supplier Table</h2>
+        <table id="supplierTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Contact</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Supplier data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+    <!-- Modal for Editing Data -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit Data</h2>
+            <div class="form-group">
+                <label for="editField1">Field 1</label>
+                <input type="text" id="editField1">
+            </div>
+            <div class="form-group">
+                <label for="editField2">Field 2</label>
+                <input type="text" id="editField2">
+            </div>
+            <div class="form-group">
+                <label for="editField3">Field 3</label>
+                <input type="text" id="editField3">
+            </div>
+            <div class="form-group" id="extraFields"></div> <!-- For additional fields if needed -->
+            <button id="saveChangesButton">Save Changes</button>
+        </div>
+    </div>
+    <script>
+        let editIndex;
+        let currentTable;
+        // Inventory Data
+        function loadInventory() {
+            const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+            const inventoryTableBody = document.getElementById('inventoryTable').querySelector('tbody');
+            inventoryTableBody.innerHTML = '';
+            inventory.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                        <td>${item.name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.expiryDate}</td>
+                        <td>${item.supplier}</td>
+                        <td>${item.category}</td>
+                        <td>
+                            <button onclick="editData(${index}, 'inventory')">Edit</button>
+                            <button onclick="deleteData(${index}, 'inventory')">Delete</button>
+                        </td>
+                    `;
+                inventoryTableBody.appendChild(row);
+            });
+        }
+        // Employee Data
+        function loadEmployees() {
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            const employeeTableBody = document.getElementById('employeeTable').querySelector('tbody');
+            employeeTableBody.innerHTML = '';
+            employees.forEach((employee, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                        <td>${employee.name}</td>
+                        <td>${employee.role}</td>
+                        <td>${employee.salary}</td>
+                        <td>${employee.phone}</td>
+                        <td>${employee.address}</td>
+                        <td>${employee.dob}</td>
+                        <td>${employee.hireDate}</td>
+                        <td>
+                            <button onclick="editData(${index}, 'employees')">Edit</button>
+                            <button onclick="deleteData(${index}, 'employees')">Delete</button>
+                        </td>
+                    `;
+                employeeTableBody.appendChild(row);
+            });
+        }
+        // Supplier Data
+        function loadSuppliers() {
+            const suppliers = JSON.parse(localStorage.getItem('suppliers')) || [];
+            const supplierTableBody = document.getElementById('supplierTable').querySelector('tbody');
+            supplierTableBody.innerHTML = '';
+            suppliers.forEach((supplier, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                        <td>${supplier.name}</td>
+                        <td>${supplier.contact}</td>
+                        <td>${supplier.phone}</td>
+                        <td>${supplier.address}</td>
+                        <td>
+                            <button onclick="editData(${index}, 'suppliers')">Edit</button>
+                            <button onclick="deleteData(${index}, 'suppliers')">Delete</button>
+                        </td>
+                    `;
+                supplierTableBody.appendChild(row);
+            });
+        }
+        // Open modal and load data for editing
+        function editData(index, tableName) {
+            const data = JSON.parse(localStorage.getItem(tableName)) || [];
+            const item = data[index];
+            // Dynamically adjust the form based on the table
+            if (tableName === 'inventory') {
+                setModalFields(item, ['name', 'quantity', 'expiryDate', 'supplier', 'category']);
+            } else if (tableName === 'employees') {
+                setModalFields(item, ['name', 'role', 'salary', 'phone', 'address', 'dob', 'hireDate']);
+            } else if (tableName === 'suppliers') {
+                setModalFields(item, ['name', 'contact', 'phone', 'address']);
+            }
+            // Show modal
+            document.getElementById('editModal').style.display = "block";
+            editIndex = index;
+            currentTable = tableName;
+        }
+        // Save changes and update local storage
+        document.getElementById('saveChangesButton').addEventListener('click', function () {
+            const data = JSON.parse(localStorage.getItem(currentTable)) || [];
+            const updatedItem = getModalFields();
+            // Update the item and save it to local storage
+            data[editIndex] = updatedItem;
+            localStorage.setItem(currentTable, JSON.stringify(data));
+            // Reload the table and close the modal
+            if (currentTable === 'inventory') loadInventory();
+            if (currentTable === 'employees') loadEmployees();
+            if (currentTable === 'suppliers') loadSuppliers();
+            document.getElementById('editModal').style.display = "none";
+        });
+        // Delete data
+        function deleteData(index, tableName) {
+            const data = JSON.parse(localStorage.getItem(tableName)) || [];
+            data.splice(index, 1);
+            localStorage.setItem(tableName, JSON.stringify(data));
+            // Reload the table
+            if (tableName === 'inventory') loadInventory();
+            if (tableName === 'employees') loadEmployees();
+            if (tableName === 'suppliers') loadSuppliers();
+        }
+        // Modal handling functions
+        function setModalFields(item, fields) {
+            document.getElementById('editField1').value = item[fields[0]] || '';
+            document.getElementById('editField2').value = item[fields[1]] || '';
+            document.getElementById('editField3').value = item[fields[2]] || '';
+            const extraFieldsContainer = document.getElementById('extraFields');
+            extraFieldsContainer.innerHTML = '';
+            for (let i = 3; i < fields.length; i++) {
+                extraFieldsContainer.innerHTML += `
+                        <div class="form-group">
+                            <label for="editField${i + 1}">${fields[i]}</label>
+                            <input type="text" id="editField${i + 1}" value="${item[fields[i]] || ''}">
+                        </div>
+                    `;
+            }
+        }
+        function getModalFields() {
+            const fields = {};
+            fields.name = document.getElementById('editField1').value;
+            fields.quantity = document.getElementById('editField2').value;
+            fields.expiryDate = document.getElementById('editField3').value;
+            document.querySelectorAll('#extraFields input').forEach((input, index) => {
+                fields[`field${index + 4}`] = input.value;
+            });
+            return fields;
+        }
+        // Close modal on click outside
+        window.onclick = function (event) {
+            const modal = document.getElementById('editModal');
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+        document.querySelector('.close').onclick = function () {
+            document.getElementById('editModal').style.display = "none";
+        }
+        // Initialize the page by loading all data
+        loadInventory();
+        loadEmployees();
+        loadSuppliers();
+    </script>
+</body>
+</html>

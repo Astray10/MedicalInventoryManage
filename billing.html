@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing Management - Medical Inventory</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container" id="billingDetails">
+        <h1>Billing Management</h1>
+        <div class="billing-container">
+            <form id="billingForm">
+                <input type="text" id="patientName" placeholder="Patient Name" required>
+                <input type="text" id="contactNumber" placeholder="Contact Number" required>
+                <div id="itemsContainer">
+                    <select class="itemSelect" required>
+                        <option value="" disabled selected>Select Item</option>
+                    </select>
+                    <input type="number" class="itemAmount" placeholder="Amount" required>
+                </div>
+                <button type="button" id="addItemButton">Add Another Item</button>
+                <button type="submit" class="button-primary">Add Bill</button>
+                <button type="button" id="printButton" class="button-primary">Print Bill</button>
+            </form>
+        </div>
+        <div class="billing-list">
+            <table id="billingTable">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="billingTableBody">
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td><strong>Total Amount:</strong></td>
+                        <td><strong id="totalAmount">0</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div id="patientDetails" style="display: none;">
+            <strong>Patient Name: </strong><span id="displayPatientName"></span><br>
+            <strong>Contact Number: </strong><span id="displayContactNumber"></span>
+        </div>
+    </div>
+    <script>
+        let totalAmount = 0;
+        // Function to dynamically populate item dropdown from localStorage
+        function populateItemDropdown() {
+            const itemSelects = document.getElementsByClassName('itemSelect');
+            const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+            for (let i = 0; i < itemSelects.length; i++) {
+                itemSelects[i].innerHTML = '<option value="" disabled selected>Select Item</option>'; // Reset dropdown options
+                inventory.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.name; // Assuming 'name' is the property for item name
+                    option.textContent = item.name;
+                    itemSelects[i].appendChild(option);
+                });
+            }
+        }
+        // Add new item input fields and dropdowns
+        document.getElementById('addItemButton').addEventListener('click', function () {
+            const itemsContainer = document.getElementById('itemsContainer');
+            const newItemInput = `<select class="itemSelect" required>
+                                                <option value="" disabled selected>Select Item</option>
+                                          </select>
+                                          <input type="number" class="itemAmount" placeholder="Amount" required>`;
+            itemsContainer.insertAdjacentHTML('beforeend', newItemInput);
+            populateItemDropdown(); // Populate the new dropdown with items
+        });
+        // Initialize the first item dropdown with items from localStorage
+        populateItemDropdown();
+        // Billing form submit event listener
+        document.getElementById('billingForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const patientName = document.getElementById('patientName').value;
+            const contactNumber = document.getElementById('contactNumber').value;
+            const itemSelects = document.getElementsByClassName('itemSelect');
+            const itemAmounts = document.getElementsByClassName('itemAmount');
+            document.getElementById('billingTableBody').innerHTML = ''; // Clear previous billing table
+            totalAmount = 0;
+            for (let i = 0; i < itemSelects.length; i++) {
+                const itemName = itemSelects[i].value;
+                const itemAmount = parseFloat(itemAmounts[i].value);
+
+                const tableBody = document.getElementById('billingTableBody');
+                const newRow = `<tr>
+                                            <td>${itemName}</td>
+                                            <td>${itemAmount.toFixed(2)}</td>
+                                        </tr>`;
+                tableBody.innerHTML += newRow;
+                totalAmount += itemAmount;
+            }
+            document.getElementById('totalAmount').innerText = totalAmount.toFixed(2);
+            // Display patient details for print
+            document.getElementById('displayPatientName').innerText = patientName;
+            document.getElementById('displayContactNumber').innerText = contactNumber;
+            document.getElementById('patientDetails').style.display = 'block';
+            // Reset the form
+            document.getElementById('billingForm').reset();
+            populateItemDropdown(); // Re-populate dropdown for the next bill
+        });
+        // Print bill functionality
+        document.getElementById('printButton').addEventListener('click', function () {
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>Print Bill</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; }
+                            h1 { text-align: center; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                            th, td { border: 1px solid #000; padding: 10px; text-align: left; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Billing Details</h1>
+                        <p><strong>Patient Name:</strong> ${document.getElementById('displayPatientName').innerText}</p>
+                        <p><strong>Contact Number:</strong> ${document.getElementById('displayContactNumber').innerText}</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${document.getElementById('billingTableBody').innerHTML}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td><strong>Total Amount:</strong></td>
+                                    <td><strong>${totalAmount.toFixed(2)}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </body>
+                    </html>
+                `);
+            printWindow.document.close();
+            printWindow.print();
+        });
+    </script>
+</body>
+</html>
